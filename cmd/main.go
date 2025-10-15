@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"os"
 
@@ -13,7 +14,9 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	input := flag.String("path", "", "file path")
+	flag.Parse()
 
-	filePaths := files.CollectFiles(path + "/test")
+	filePaths := files.CollectFiles(path +"/"+ *input)
 	parser.ParseFiles(filePaths)
 }
