@@ -1,11 +1,11 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 
 	"github.com/devasherr/gpad/internal/files"
+	"github.com/devasherr/gpad/internal/parser"
 )
 
 func main() {
@@ -14,6 +14,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	filesPath := files.CollectFiles(path + "/test")
-	fmt.Println(filesPath)
+	filePaths := files.CollectFiles(path + "/test")
+	parser.ParseFiles(filePaths)
 }
