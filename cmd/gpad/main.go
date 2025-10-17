@@ -17,6 +17,6 @@ func main() {
 	input := flag.String("path", "", "file path")
 	flag.Parse()
 
-	filePaths := files.CollectFiles(path +"/"+ *input)
+	filePaths := files.CollectFiles(path + "/" + *input)
 	parser.ParseFiles(filePaths)
 }
