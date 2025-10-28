@@ -19,8 +19,21 @@ gpad
 Thats it, all structs in the codebase have been sorted!!
 
 
-You can also specify a custom directory to start from using the -path flag:
+- You can also specify a custom directory to start from using the -path flag:
 ```bash
 gpad -path "/internal/models"
 ```
 This will only process structs within the specified directory and its subdirectories
+
+- If you want more details you can run the tool in verbose mode:
+
+```bash
+gpad -path "/internal/models" -v
+```
+
+| Metric              | Value                 |
+|---------------------|-----------------------|
+| Time Taken:         | 6.370862ms            |
+| Initial Allocation: | 128 bytes             |
+| Current Allocation: | 112 bytes             |
+| Saved:              | 16 bytes (12.50%)     |
