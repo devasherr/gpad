@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"fmt"
 	"go/ast"
 	"go/format"
 	"go/parser"
@@ -9,6 +10,28 @@ import (
 	"os"
 	"sort"
 )
+
+var typeInfo = map[string]struct {
+	size, align int
+}{
+	"bool":       {1, 1},
+	"int8":       {1, 1},
+	"uint8":      {1, 1},
+	"int16":      {2, 2},
+	"uint16":     {2, 2},
+	"int32":      {4, 4},
+	"uint32":     {4, 4},
+	"float32":    {4, 4},
+	"int64":      {8, 8},
+	"uint64":     {8, 8},
+	"float64":    {8, 8},
+	"complex64":  {8, 8},
+	"complex128": {16, 8},
+	"string":     {16, 8},
+	"uintptr":    {8, 8},
+	"int":        {8, 8},
+	"uint":       {8, 8},
+}
 
 func typeSize(expr ast.Expr) int {
 	switch t := expr.(type) {
@@ -46,13 +69,32 @@ func sortFieldList(fields []*ast.Field) []*ast.Field {
 	return fields
 }
 
-func parseFile(path string) {
+func calculateStructMemory(fields []*ast.Field) int {
+	offset, maxAlign := 0, 0
+
+	for _, field := range fields {
+		info := typeInfo[fmt.Sprintf("%s", field.Type)]
+		padding := (info.align - (offset % info.align)) % info.align
+		offset += padding + info.size
+
+		if info.align > maxAlign {
+			maxAlign = info.align
+		}
+	}
+
+	totalSize := (offset + maxAlign - 1) / maxAlign * maxAlign
+	return totalSize
+}
+
+func parseFile(path string, verbose bool) (int, int) {
 	fset := token.NewFileSet()
 	file, err := parser.ParseFile(fset, path, nil, 0)
 	if err != nil {
 		log.Printf("failed to parse file %s\n", path)
-		return
+		return -1, -1
 	}
+
+	beforeSize, afterSize := 0, 0
 
 	ast.Inspect(file, func(n ast.Node) bool {
 		s, ok := n.(*ast.TypeSpec)
@@ -61,7 +103,16 @@ func parseFile(path string) {
 		}
 
 		if st, ok := s.Type.(*ast.StructType); ok {
+			if verbose {
+				beforeSize += calculateStructMemory(st.Fields.List)
+			}
+
 			orderedFieldList := sortFieldList(st.Fields.List)
+
+			if verbose {
+				afterSize += calculateStructMemory(orderedFieldList)
+			}
+
 			st.Fields.List = orderedFieldList
 		}
 
@@ -74,10 +125,16 @@ func parseFile(path string) {
 	}
 
 	format.Node(f, fset, file)
+	return beforeSize, afterSize
 }
 
-func ParseFiles(filePaths []string) {
+func ParseFiles(filePaths []string, verbose bool) (int, int) {
+	totalBefore, totalAfter := 0, 0
 	for _, filePath := range filePaths {
-		parseFile(filePath)
+		before, after := parseFile(filePath, verbose)
+
+		totalBefore += before
+		totalAfter += after
 	}
+	return totalBefore, totalAfter
 }
