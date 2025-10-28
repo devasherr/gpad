@@ -15,9 +15,9 @@ func main() {
 		log.Fatal(err)
 	}
 
-	input := flag.String("path", "", "file path")
+	input := flag.String("path", "", "directory entry")
 	flag.Parse()
 
-	filePaths := files.CollectFiles(path + "/" + *input)
+	filePaths := files.CollectFiles(path + *input)
 	parser.ParseFiles(filePaths)
 }
